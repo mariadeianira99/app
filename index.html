@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Percorso Didattico Interattivo - LearningApps</title>
+    <!-- Caricamento Tailwind CSS per lo styling moderno e responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter da Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        /* Animazioni fluide per transizioni e feedback */
+        .fade-in {
+            animation: fadeIn 0.35s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-warning {
+            animation: pulseRed 1.5s infinite;
+        }
+
+        @keyframes pulseRed {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+        }
+
+        /* Stili dedicati esclusivamente alla stampa del Report o del Registro */
+        @media print {
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .print-container {
+                box-shadow: none !important;
+                border: 2px solid #1e293b !important;
+                padding: 24px !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            /* Stampa registro docenti */
+            body.printing-teacher #student-area-section {
+                display: none !important;
+            }
+            body.printing-teacher #teacher-area-section {
+                display: block !important;
+            }
+            body.printing-teacher .teacher-controls {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- ==================== HEADER / NAVBAR PRINCIPALE ==================== -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Logo e Titolo -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Percorso Didattico Interattivo</h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">Verifica sequenziale a 3 livelli • LearningApps</p>
+                </div>
+            </div>
+
+            <!-- Pulsanti Navigazione Aree -->
+            <nav class="flex items-center space-x-2 sm:space-x-3">
+                <button id="nav-student-btn" onclick="switchArea('student')" class="flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>Area Alunni</span>
+                </button>
+
+                <button id="nav-teacher-btn" onclick="openTeacherAuth()" class="flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span>Area Docenti</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ==================== BANNER MESSAGGI DI NOTIFICA INTERNI ==================== -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 max-w-sm no-print"></div>
+
+    <!-- ==================== CONTENUTO PRINCIPALE ==================== -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+        <!-- ===================================================================== -->
+        <!-- SEZIONE 1: AREA ALUNNI                                                -->
+        <!-- ===================================================================== -->
+        <section id="student-area-section" class="fade-in">
+
+            <!-- VISTA 1A: SCHEDA REGISTRAZIONE ALUNNO & IMPOSTAZIONI TIMER -->
+            <div id="student-setup-view" class="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-6 text-white">
+                    <div class="flex items-center space-x-2 text-indigo-100 text-xs font-semibold uppercase tracking-wider mb-1">
+                        <span>Scheda Identificativa Alunno</span>
+                    </div>
+                    <h2 class="text-2xl font-bold">Benvenuto nel Percorso Didattico</h2>
+                    <p class="text-sm text-indigo-100 mt-1">Compila i tuoi dati e verifica le impostazioni del tempo prima di iniziare. Dovrai superare tutte e 3 le prove in sequenza.</p>
+                </div>
+
+                <form id="student-start-form" onsubmit="startLearningPath(event)" class="p-6 sm:p-8 space-y-6">
+                    <!-- Dati Anagrafici -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="student-name" class="block text-sm font-semibold text-slate-700 mb-1">Nome <span class="text-rose-500">*</span></label>
+                            <input type="text" id="student-name" required placeholder="Es. Marco" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-slate-800">
+                        </div>
+                        <div>
+                            <label for="student-surname" class="block text-sm font-semibold text-slate-700 mb-1">Cognome <span class="text-rose-500">*</span></label>
+                            <input type="text" id="student-surname" required placeholder="Es. Rossi" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-slate-800">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="student-class" class="block text-sm font-semibold text-slate-700 mb-1">Classe <span class="text-rose-500">*</span></label>
+                            <input type="text" id="student-class" required placeholder="Es. 2B" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-slate-800 uppercase">
+                        </div>
+                        <div>
+                            <label for="student-date" class="block text-sm font-semibold text-slate-700 mb-1">Data di svolgimento <span class="text-rose-500">*</span></label>
+                            <input type="date" id="student-date" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-slate-800">
+                        </div>
+                    </div>
+
+                    <!-- Configurazione Timer -->
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span class="font-bold text-slate-800 text-sm">Modalità Timer</span>
+                            </div>
+                            <span id="teacher-lock-badge" class="hidden text-xs font-semibold bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full">Impostato dal Docente</span>
+                        </div>
+
+                        <div id="timer-options-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <!-- Opzione 1: 5 minuti -->
+                            <label class="relative flex flex-col p-3.5 bg-white border-2 border-indigo-600 rounded-xl cursor-pointer transition hover:bg-indigo-50/40" id="card-timer-5">
+                                <input type="radio" name="timerMode" value="5min" checked onchange="handleTimerModeChange()" class="sr-only">
+                                <span class="text-sm font-bold text-slate-900">5 Minuti</span>
+                                <span class="text-xs text-slate-500 mt-0.5">Standard (05:00)</span>
+                            </label>
+
+                            <!-- Opzione 2: Personalizzato -->
+                            <label class="relative flex flex-col p-3.5 bg-white border-2 border-slate-200 rounded-xl cursor-pointer transition hover:bg-slate-50" id="card-timer-custom">
+                                <input type="radio" name="timerMode" value="custom" onchange="handleTimerModeChange()" class="sr-only">
+                                <span class="text-sm font-bold text-slate-900">Personalizzato</span>
+                                <span class="text-xs text-slate-500 mt-0.5">Scegli i minuti</span>
+                            </label>
+
+                            <!-- Opzione 3: Timer Libero -->
+                            <label class="relative flex flex-col p-3.5 bg-white border-2 border-slate-200 rounded-xl cursor-pointer transition hover:bg-slate-50" id="card-timer-free">
+                                <input type="radio" name="timerMode" value="free" onchange="handleTimerModeChange()" class="sr-only">
+                                <span class="text-sm font-bold text-slate-900">Timer Libero</span>
+                                <span class="text-xs text-slate-500 mt-0.5">Senza limiti</span>
+                            </label>
+                        </div>
+
+                        <!-- Input minuti personalizzati -->
+                        <div id="custom-minutes-wrapper" class="hidden pt-2">
+                            <label for="custom-minutes-input" class="block text-xs font-semibold text-slate-600 mb-1">Inserisci durata in minuti (da 1 a 120):</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="custom-minutes-input" min="1" max="120" value="10" class="w-28 px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold text-slate-800">
+                                <span class="text-sm text-slate-600">minuti totali per le 3 attività</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Regole sintetiche -->
+                    <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-4 text-xs text-blue-900 space-y-1.5">
+                        <p class="font-bold flex items-center space-x-1.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Regole del Percorso:</span>
+                        </p>
+                        <ul class="list-disc list-inside space-y-1 text-blue-800">
+                            <li>Le 3 attività si sbloccano <strong>solo in ordine sequenziale</strong> (1 → 2 → 3).</li>
+                            <li>Se il tempo scade prima del completamento della 3ª attività, la prova risulta <strong>Non Superata</strong>.</li>
+                            <li>Al termine è <strong>obbligatorio stampare il Report</strong> dei risultati.</li>
+                        </ul>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2 text-base cursor-pointer">
+                        <span>Inizia il Percorso</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <!-- VISTA 1B: SVOLGIMENTO SEQUENZIALE DELLE 3 LEARNINGAPPS -->
+            <div id="student-play-view" class="hidden space-y-6">
+
+                <!-- Barra Superiore Stato Alunno + Timer -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <!-- Info Alunno -->
+                    <div class="flex items-center space-x-3 w-full md:w-auto">
+                        <div class="h-11 w-11 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-lg shrink-0" id="active-student-initials">
+                            MR
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h3 class="font-bold text-slate-900" id="active-student-fullname">Marco Rossi</h3>
+                                <span class="px-2 py-0.5 text-xs font-bold bg-slate-100 text-slate-700 rounded-md" id="active-student-class">2B</span>
+                            </div>
+                            <p class="text-xs text-slate-500">
+                                Tentativo N° <strong id="active-attempt-count" class="text-slate-700">1</strong> • Data: <span id="active-student-date"></span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Display Timer -->
+                    <div id="timer-box" class="flex items-center space-x-3 bg-slate-900 text-white px-5 py-2.5 rounded-xl shadow-sm w-full md:w-auto justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold" id="timer-label">Tempo Rimanente</div>
+                            <div class="text-xl font-mono font-extrabold tracking-tight" id="timer-display">05:00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stepper Sequenziale (Vincolo 1 -> 2 -> 3) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <!-- Step 1 -->
+                    <div id="step-indicator-1" class="bg-white border-2 border-indigo-600 rounded-xl p-3.5 flex items-center justify-between shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <span id="step-badge-1" class="h-8 w-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-sm">1</span>
+                            <div>
+                                <div class="text-sm font-bold text-slate-900">Attività 1</div>
+                                <div id="step-status-text-1" class="text-xs font-medium text-indigo-600">In corso...</div>
+                            </div>
+                        </div>
+                        <span id="step-icon-1" class="text-indigo-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </span>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div id="step-indicator-2" class="bg-slate-100 border-2 border-slate-200 rounded-xl p-3.5 flex items-center justify-between opacity-75">
+                        <div class="flex items-center space-x-3">
+                            <span id="step-badge-2" class="h-8 w-8 rounded-lg bg-slate-300 text-slate-600 font-bold flex items-center justify-center text-sm">2</span>
+                            <div>
+                                <div class="text-sm font-bold text-slate-700">Attività 2</div>
+                                <div id="step-status-text-2" class="text-xs font-medium text-slate-500">Bloccata (Completa la 1ª)</div>
+                            </div>
+                        </div>
+                        <span id="step-icon-2" class="text-slate-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </span>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div id="step-indicator-3" class="bg-slate-100 border-2 border-slate-200 rounded-xl p-3.5 flex items-center justify-between opacity-75">
+                        <div class="flex items-center space-x-3">
+                            <span id="step-badge-3" class="h-8 w-8 rounded-lg bg-slate-300 text-slate-600 font-bold flex items-center justify-center text-sm">3</span>
+                            <div>
+                                <div class="text-sm font-bold text-slate-700">Attività 3</div>
+                                <div id="step-status-text-3" class="text-xs font-medium text-slate-500">Bloccata (Completa la 2ª)</div>
+                            </div>
+                        </div>
+                        <span id="step-icon-3" class="text-slate-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Contenitore Principale Iframe LearningApps -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <h4 class="font-bold text-slate-800 text-sm" id="current-app-title">Attività 1 di 3 - Esercizio Interattivo</h4>
+                        </div>
+                        <button onclick="reloadCurrentIframe()" class="text-xs font-semibold text-slate-600 hover:text-indigo-600 flex items-center space-x-1 px-2.5 py-1 rounded-lg hover:bg-slate-200/60 transition cursor-pointer" title="Ricarica l'esercizio corrente">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span>Ricarica App</span>
+                        </button>
+                    </div>
+
+                    <!-- Area Iframe -->
+                    <div class="relative w-full bg-slate-100" style="min-height: 500px;">
+                        <iframe id="learningapp-iframe" src="" style="border:0px;width:100%;height:500px" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe>
+                    </div>
+
+                    <!-- Pannello di Verifica e Sblocco Sequenziale -->
+                    <div class="p-5 bg-slate-50 border-t border-slate-200">
+                        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                            <!-- Checkbox di conferma onesta / verifica -->
+                            <label class="flex items-start space-x-3 cursor-pointer select-none">
+                                <input type="checkbox" id="confirm-completion-checkbox" onchange="toggleNextStepButton()" class="mt-1 h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                                <span class="text-sm text-slate-700 leading-snug">
+                                    <strong>Conferma superamento:</strong> Dichiaro di aver completato con successo l'esercizio qui sopra e di aver visualizzato il messaggio di feedback positivo di LearningApps.
+                                </span>
+                            </label>
+
+                            <!-- Pulsanti Azione -->
+                            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end shrink-0">
+                                <button type="button" onclick="handleStepFailedAttempt()" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 transition flex items-center space-x-1.5 cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    <span>Non superato / Riprova</span>
+                                </button>
+
+                                <button type="button" id="btn-unlock-next" disabled onclick="completeCurrentStep()" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center space-x-2 cursor-pointer">
+                                    <span id="btn-unlock-next-text">Sblocca Attività 2</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 1C: REPORT FINALE ALUNNO (SUPERATO O NON SUPERATO) -->
+            <div id="student-result-view" class="hidden max-w-3xl mx-auto space-y-6">
+
+                <!-- Scheda Riepilogativa Stampabile -->
+                <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden print-container">
+
+                    <!-- Intestazione Stampa (visibile solo in stampa o come header elegante) -->
+                    <div id="result-banner" class="px-6 py-6 sm:px-8 bg-emerald-600 text-white">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider mb-2" id="result-badge-label">
+                                    Attestato di Completamento
+                                </span>
+                                <h2 class="text-2xl sm:text-3xl font-extrabold" id="result-main-title">PERCORSO SUPERATO!</h2>
+                                <p class="text-sm opacity-90 mt-1" id="result-subtitle">Tutte e 3 le attività didattiche sono state completate positivamente.</p>
+                            </div>
+                            <div class="bg-white/15 p-3.5 rounded-2xl self-start sm:self-center" id="result-status-icon">
+                                <!-- Icona dinamica -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Corpo Dati Report -->
+                    <div class="p-6 sm:p-8 space-y-6">
+                        <div class="border-b border-slate-200 pb-4 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Report Ufficiale Attività Didattica</h3>
+                                <p class="text-sm font-semibold text-slate-700 mt-0.5">Percorso Sequenziale LearningApps (3 Moduli)</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-400 block">Codice Verifica</span>
+                                <span class="font-mono text-xs font-bold text-slate-700" id="report-verification-code">#LA-2026-000</span>
+                            </div>
+                        </div>
+
+                        <!-- Griglia Informazioni Alunno e Prestazione -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                                <span class="text-xs font-semibold text-slate-500 uppercase">Alunno</span>
+                                <p class="text-base font-bold text-slate-900 mt-0.5" id="rep-fullname">Marco Rossi</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                                <span class="text-xs font-semibold text-slate-500 uppercase">Classe e Data</span>
+                                <p class="text-base font-bold text-slate-900 mt-0.5"><span id="rep-class">2B</span> — <span id="rep-date">25/11/2026</span></p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                                <span class="text-xs font-semibold text-slate-500 uppercase">Risultato Ottenuto</span>
+                                <p class="text-base font-extrabold mt-0.5" id="rep-outcome">SUPERATO (3/3 Attività)</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                                <span class="text-xs font-semibold text-slate-500 uppercase">Tentativi & Tempo Esecuzione</span>
+                                <p class="text-base font-bold text-slate-900 mt-0.5">
+                                    <span id="rep-attempts">1</span> tentativ<span id="rep-attempts-suffix">o</span> • <span id="rep-time">02m 45s</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Dettaglio singole attività -->
+                        <div>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Dettaglio Avanzamento Moduli</h4>
+                            <div class="space-y-2" id="rep-steps-breakdown">
+                                <!-- Popolato dinamicamente -->
+                            </div>
+                        </div>
+
+                        <!-- Spazio Firme (Visibile in stampa) -->
+                        <div class="hidden print-only pt-10 mt-8 border-t border-slate-300 grid grid-cols-2 gap-8 text-sm">
+                            <div>
+                                <p class="text-slate-600 mb-8">Firma dell'Alunno:</p>
+                                <div class="border-b border-slate-400 w-4/5"></div>
+                            </div>
+                            <div>
+                                <p class="text-slate-600 mb-8">Firma del Docente / Genitore:</p>
+                                <div class="border-b border-slate-400 w-4/5"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Avviso Stampa Obbligatoria e Pulsanti Azione -->
+                <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 sm:p-6 space-y-4 no-print">
+                    <div class="flex items-start space-x-3">
+                        <div class="bg-amber-100 text-amber-700 p-2 rounded-xl shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-amber-900 text-base">Stampa del Report Obbligatoria</h4>
+                            <p class="text-sm text-amber-800 mt-0.5">
+                                Prima di terminare o iniziare una nuova partita, è <strong>obbligatorio stampare il report</strong> (o salvarlo in PDF) per documentare il risultato ottenuto al docente.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                        <!-- Pulsante Obbligatorio Stampa Report -->
+                        <button type="button" id="btn-print-report" onclick="printStudentReport()" class="w-full sm:w-auto flex-1 py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            <span id="btn-print-text">Stampa Report (Obbligatorio)</span>
+                        </button>
+
+                        <!-- Pulsante Gioca di Nuovo -->
+                        <button type="button" onclick="playAgain()" class="w-full sm:w-auto py-3.5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span>Gioca di nuovo</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- SEZIONE 2: AREA DOCENTI (PROTETTA DA CODICE doc2026)                  -->
+        <!-- ===================================================================== -->
+        <section id="teacher-area-section" class="hidden fade-in space-y-6">
+
+            <!-- Intestazione Area Docenti -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 text-xs font-bold uppercase">Accesso Riservato</span>
+                        <span class="text-xs text-slate-400">Codice attivo: doc2026</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900 mt-1">Dashboard Docenti e Registro Risultati</h2>
+                    <p class="text-sm text-slate-500">Monitora gli esiti degli alunni, i tentativi effettuati, i tempi e configura il timer predefinito.</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 teacher-controls">
+                    <button onclick="printTeacherRegister()" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-800 text-white hover:bg-slate-900 transition flex items-center space-x-2 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        <span>Stampa Registro</span>
+                    </button>
+                    <button onclick="exportTeacherCSV()" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition flex items-center space-x-2 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span>Esporta CSV</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Impostazione Globale Timer da parte del Docente -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 teacher-controls">
+                <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    <span>Configurazione Timer per la Classe</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Regola Timer Alunni</label>
+                        <select id="teacher-timer-policy" onchange="toggleTeacherCustomMin()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="student_choice">Libera scelta dell'alunno (Default: 5 min)</option>
+                            <option value="force_5min">Obbligatorio: 5 Minuti</option>
+                            <option value="force_custom">Obbligatorio: Minuti Personalizzati</option>
+                            <option value="force_free">Obbligatorio: Timer Libero (Senza limiti)</option>
+                        </select>
+                    </div>
+                    <div id="teacher-custom-min-box" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Minuti Imposti</label>
+                        <input type="number" id="teacher-custom-minutes" min="1" max="120" value="8" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <button onclick="saveTeacherTimerPolicy()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition cursor-pointer">
+                            Applica Impostazione
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtri e Statistiche Registro -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 teacher-controls">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <input type="text" id="teacher-search-input" oninput="renderTeacherTable()" placeholder="Cerca nome, cognome o classe..." class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-60">
+
+                        <select id="teacher-filter-status" onchange="renderTeacherTable()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="all">Tutti gli esiti</option>
+                            <option value="passed">Solo Superati</option>
+                            <option value="failed">Solo Non Superati</option>
+                        </select>
+                    </div>
+
+                    <button onclick="requestClearRecords()" class="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-2 rounded-lg transition self-start sm:self-auto cursor-pointer">
+                        Svuota Registro Dati
+                    </button>
+                </div>
+
+                <!-- Conferma Svuotamento Registro (Inline al posto di confirm() nativo) -->
+                <div id="clear-confirm-banner" class="hidden bg-rose-50 border-b border-rose-200 px-5 py-3 flex items-center justify-between">
+                    <span class="text-sm font-semibold text-rose-800">Sei sicuro di voler eliminare definitivamente tutti i risultati salvati degli alunni?</span>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="confirmClearRecords()" class="px-3 py-1.5 bg-rose-600 text-white text-xs font-bold rounded-lg hover:bg-rose-700 cursor-pointer">Sì, elimina tutto</button>
+                        <button onclick="cancelClearRecords()" class="px-3 py-1.5 bg-white text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg hover:bg-slate-100 cursor-pointer">Annulla</button>
+                    </div>
+                </div>
+
+                <!-- Tabella Risultati -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold uppercase text-slate-500 tracking-wider">
+                                <th class="py-3.5 px-4">Data</th>
+                                <th class="py-3.5 px-4">Nome e Cognome</th>
+                                <th class="py-3.5 px-4">Classe</th>
+                                <th class="py-3.5 px-4">Esito</th>
+                                <th class="py-3.5 px-4">Step Completati</th>
+                                <th class="py-3.5 px-4">N° Tentativi</th>
+                                <th class="py-3.5 px-4">Tempo Esecuzione</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacher-records-tbody" class="divide-y divide-slate-200 text-sm">
+                            <!-- Righe generate dinamicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Stato vuoto tabella -->
+                <div id="teacher-empty-state" class="hidden py-12 text-center">
+                    <p class="text-slate-500 text-sm">Nessun risultato registrato al momento.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== MODALE AUTENTICAZIONE AREA DOCENTI ==================== -->
+    <div id="teacher-auth-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden fade-in">
+            <div class="px-6 py-5 bg-slate-900 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <h3 class="font-bold text-lg">Accesso Area Docenti</h3>
+                </div>
+                <button onclick="closeTeacherAuth()" class="text-slate-400 hover:text-white transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form onsubmit="verifyTeacherCode(event)" class="p-6 space-y-4">
+                <p class="text-sm text-slate-600">Inserisci il codice docente per visualizzare il registro dei risultati degli alunni e configurare il timer.</p>
+                <div>
+                    <label for="teacher-code-input" class="block text-xs font-bold uppercase text-slate-500 mb-1">Codice di Accesso</label>
+                    <input type="password" id="teacher-code-input" required placeholder="Inserisci codice..." class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none text-base font-mono">
+                    <p id="teacher-auth-error" class="hidden text-xs font-semibold text-rose-600 mt-1.5">Codice non valido. Riprova.</p>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeTeacherAuth()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer">Annulla</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition cursor-pointer">Accedi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== SCRIPT LOGICA APPLICAZIONE ==================== -->
+    <script>
+        // Configurazione delle 3 attività LearningApps richieste
+        const LEARNING_APPS = [
+            {
+                step: 1,
+                title: "Attività 1 di 3 - Primo Livello",
+                url: "https://learningapps.org/watch?v=pmw0mp9gn26"
+            },
+            {
+                step: 2,
+                title: "Attività 2 di 3 - Secondo Livello",
+                url: "https://learningapps.org/watch?v=py0eb1uqk26"
+            },
+            {
+                step: 3,
+                title: "Attività 3 di 3 - Terzo Livello Finale",
+                url: "https://learningapps.org/watch?v=p14wyp4xn26"
+            }
+        ];
+
+        const TEACHER_ACCESS_CODE = "doc2026";
+        const STORAGE_RECORDS_KEY = "learningapps_path_records_v1";
+        const STORAGE_POLICY_KEY = "learningapps_teacher_policy_v1";
+
+        // Stato della sessione corrente dell'alunno
+        let sessionState = {
+            name: "",
+            surname: "",
+            studentClass: "",
+            date: "",
+            timerMode: "5min", // '5min' | 'custom' | 'free'
+            totalAllowedSeconds: 300,
+            elapsedSeconds: 0,
+            remainingSeconds: 300,
+            timerInterval: null,
+            currentStep: 1, // 1, 2, 3
+            completedSteps: 0,
+            attempts: 1,
+            isFinished: false,
+            isPassed: false,
+            reportPrinted: false
+        };
+
+        let isTeacherAuthenticated = false;
+
+        // ==================== INIZIALIZZAZIONE ====================
+        window.addEventListener("DOMContentLoaded", () => {
+            // Imposta la data odierna nel campo date
+            const today = new Date().toISOString().split("T")[0];
+            document.getElementById("student-date").value = today;
+
+            // Applica eventuali policy timer impostate dal docente
+            applyTeacherTimerPolicyToStudentForm();
+
+            // Ascolta eventuali messaggi postMessage provenienti dagli iframe LearningApps
+            window.addEventListener("message", handleExternalIframeMessage, false);
+        });
+
+        // ==================== GESTIONE NOTIFICHE TOAST ====================
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+
+            const colors = {
+                info: "bg-slate-900 text-white border-slate-700",
+                success: "bg-emerald-600 text-white border-emerald-500",
+                warning: "bg-amber-500 text-white border-amber-400",
+                error: "bg-rose-600 text-white border-rose-500"
+            };
+
+            toast.className = `px-4 py-3 rounded-xl shadow-lg border text-sm font-medium flex items-center space-x-2 fade-in ${colors[type] || colors.info}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.transition = "opacity 0.3s ease";
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // ==================== NAVIGAZIONE TRA AREA ALUNNI E AREA DOCENTI ====================
+        function switchArea(area) {
+            const studentSection = document.getElementById("student-area-section");
+            const teacherSection = document.getElementById("teacher-area-section");
+            const btnStudent = document.getElementById("nav-student-btn");
+            const btnTeacher = document.getElementById("nav-teacher-btn");
+
+            if (area === "student") {
+                studentSection.classList.remove("hidden");
+                teacherSection.classList.add("hidden");
+
+                btnStudent.className = "flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 transition cursor-pointer";
+                btnTeacher.className = "flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition cursor-pointer";
+
+                applyTeacherTimerPolicyToStudentForm();
+            } else if (area === "teacher") {
+                studentSection.classList.add("hidden");
+                teacherSection.classList.remove("hidden");
+
+                btnTeacher.className = "flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 transition cursor-pointer";
+                btnStudent.className = "flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 transition cursor-pointer";
+
+                loadTeacherPolicyUI();
+                renderTeacherTable();
+            }
+        }
+
+        // ==================== CONFIGURAZIONE TIMER ALUNNO ====================
+        function handleTimerModeChange() {
+            const selected = document.querySelector('input[name="timerMode"]:checked').value;
+            const customWrapper = document.getElementById("custom-minutes-wrapper");
+
+            // Aggiorna bordi carte radio
+            ["5min", "custom", "free"].forEach(mode => {
+                const card = document.getElementById(`card-timer-${mode === "5min" ? "5" : mode}`);
+                if (mode === selected) {
+                    card.classList.remove("border-slate-200");
+                    card.classList.add("border-indigo-600", "bg-indigo-50/30");
+                } else {
+                    card.classList.add("border-slate-200");
+                    card.classList.remove("border-indigo-600", "bg-indigo-50/30");
+                }
+            });
+
+            if (selected === "custom") {
+                customWrapper.classList.remove("hidden");
+            } else {
+                customWrapper.classList.add("hidden");
+            }
+        }
+
+        function applyTeacherTimerPolicyToStudentForm() {
+            const policy = JSON.parse(localStorage.getItem(STORAGE_POLICY_KEY) || '{"mode":"student_choice","minutes":8}');
+            const lockBadge = document.getElementById("teacher-lock-badge");
+            const radios = document.querySelectorAll('input[name="timerMode"]');
+            const customInput = document.getElementById("custom-minutes-input");
+
+            if (policy.mode === "student_choice") {
+                lockBadge.classList.add("hidden");
+                radios.forEach(r => r.disabled = false);
+                customInput.disabled = false;
+            } else {
+                lockBadge.classList.remove("hidden");
+                radios.forEach(r => r.disabled = true);
+                customInput.disabled = true;
+
+                if (policy.mode === "force_5min") {
+                    document.querySelector('input[value="5min"]').checked = true;
+                } else if (policy.mode === "force_custom") {
+                    document.querySelector('input[value="custom"]').checked = true;
+                    customInput.value = policy.minutes || 8;
+                } else if (policy.mode === "force_free") {
+                    document.querySelector('input[value="free"]').checked = true;
+                }
+                handleTimerModeChange();
+            }
+        }
+
+        // ==================== AVVIO PERCORSO DIDATTICO ====================
+        function getPreviousAttemptsForStudent(name, surname, studentClass) {
+            const records = JSON.parse(localStorage.getItem(STORAGE_RECORDS_KEY) || "[]");
+            const normName = name.trim().toLowerCase();
+            const normSurname = surname.trim().toLowerCase();
+            const normClass = studentClass.trim().toLowerCase();
+
+            const matching = records.filter(r =>
+                r.name.trim().toLowerCase() === normName &&
+                r.surname.trim().toLowerCase() === normSurname &&
+                r.studentClass.trim().toLowerCase() === normClass
+            );
+
+            if (matching.length === 0) return 0;
+            return Math.max(...matching.map(r => r.attempts || 1));
+        }
+
+        function startLearningPath(event) {
+            if (event) event.preventDefault();
+
+            const name = document.getElementById("student-name").value.trim();
+            const surname = document.getElementById("student-surname").value.trim();
+            const studentClass = document.getElementById("student-class").value.trim().toUpperCase();
+            const date = document.getElementById("student-date").value;
+            const timerMode = document.querySelector('input[name="timerMode"]:checked').value;
+
+            if (!name || !surname || !studentClass || !date) {
+                showToast("Compila tutti i campi obbligatori prima di iniziare.", "error");
+                return;
+            }
+
+            let allowedSeconds = 300;
+            if (timerMode === "5min") {
+                allowedSeconds = 300;
+            } else if (timerMode === "custom") {
+                const mins = parseInt(document.getElementById("custom-minutes-input").value, 10) || 5;
+                allowedSeconds = Math.max(1, Math.min(120, mins)) * 60;
+            } else if (timerMode === "free") {
+                allowedSeconds = 0; // 0 = illimitato
+            }
+
+            // Calcola tentativi precedenti dell'alunno
+            const prevAttempts = getPreviousAttemptsForStudent(name, surname, studentClass);
+
+            sessionState = {
+                name,
+                surname,
+                studentClass,
+                date,
+                timerMode,
+                totalAllowedSeconds: allowedSeconds,
+                elapsedSeconds: 0,
+                remainingSeconds: allowedSeconds,
+                timerInterval: null,
+                currentStep: 1,
+                completedSteps: 0,
+                attempts: prevAttempts + 1,
+                isFinished: false,
+                isPassed: false,
+                reportPrinted: false
+            };
+
+            // Aggiorna UI intestazione alunno
+            document.getElementById("active-student-initials").textContent = (name[0] + surname[0]).toUpperCase();
+            document.getElementById("active-student-fullname").textContent = `${name} ${surname}`;
+            document.getElementById("active-student-class").textContent = studentClass;
+            document.getElementById("active-attempt-count").textContent = sessionState.attempts;
+            document.getElementById("active-student-date").textContent = formatDateIT(date);
+
+            // Switch viste
+            document.getElementById("student-setup-view").classList.add("hidden");
+            document.getElementById("student-result-view").classList.add("hidden");
+            document.getElementById("student-play-view").classList.remove("hidden");
+
+            // Avvia Step 1 e Timer
+            loadStep(1);
+            startSessionTimer();
+            showToast("Percorso avviato! Completa l'Attività 1 per sbloccare la 2ª.", "info");
+        }
+
+        // ==================== GESTIONE TIMER ====================
+        function startSessionTimer() {
+            if (sessionState.timerInterval) clearInterval(sessionState.timerInterval);
+
+            const timerBox = document.getElementById("timer-box");
+            const timerLabel = document.getElementById("timer-label");
+            const timerDisplay = document.getElementById("timer-display");
+
+            timerBox.classList.remove("bg-rose-600", "pulse-warning");
+            timerBox.classList.add("bg-slate-900");
+
+            if (sessionState.timerMode === "free") {
+                timerLabel.textContent = "Tempo Trascorso (Libero)";
+                timerDisplay.textContent = "00:00";
+            } else {
+                timerLabel.textContent = "Tempo Rimanente";
+                timerDisplay.textContent = formatMMSS(sessionState.remainingSeconds);
+            }
+
+            sessionState.timerInterval = setInterval(() => {
+                if (sessionState.isFinished) {
+                    clearInterval(sessionState.timerInterval);
+                    return;
+                }
+
+                sessionState.elapsedSeconds++;
+
+                if (sessionState.timerMode === "free") {
+                    timerDisplay.textContent = formatMMSS(sessionState.elapsedSeconds);
+                } else {
+                    sessionState.remainingSeconds--;
+                    timerDisplay.textContent = formatMMSS(Math.max(0, sessionState.remainingSeconds));
+
+                    // Avviso visivo ultimi 30 secondi
+                    if (sessionState.remainingSeconds <= 30 && sessionState.remainingSeconds > 0) {
+                        timerBox.classList.remove("bg-slate-900");
+                        timerBox.classList.add("bg-rose-600", "pulse-warning");
+                    }
+
+                    // Tempo scaduto!
+                    if (sessionState.remainingSeconds <= 0) {
+                        clearInterval(sessionState.timerInterval);
+                        handleTimeExpired();
+                    }
+                }
+            }, 1000);
+        }
+
+        function handleTimeExpired() {
+            showToast("Tempo scaduto! Il percorso non è stato superato in tempo.", "error");
+            finishLearningPath(false, "Tempo Scaduto");
+        }
+
+        // ==================== GESTIONE STEP E VINCOLI SEQUENZIALI ====================
+        function loadStep(stepNumber) {
+            sessionState.currentStep = stepNumber;
+            const appData = LEARNING_APPS[stepNumber - 1];
+
+            // Aggiorna titolo e iframe
+            document.getElementById("current-app-title").textContent = appData.title;
+            document.getElementById("learningapp-iframe").src = appData.url;
+
+            // Reset checkbox conferma
+            const checkbox = document.getElementById("confirm-completion-checkbox");
+            checkbox.checked = false;
+            toggleNextStepButton();
+
+            // Aggiorna testo pulsante successivo
+            const nextBtnText = document.getElementById("btn-unlock-next-text");
+            if (stepNumber < 3) {
+                nextBtnText.textContent = `Sblocca Attività ${stepNumber + 1}`;
+            } else {
+                nextBtnText.textContent = "Concludi e Ottieni Risultato";
+            }
+
+            // Aggiorna grafica degli indicatori di step (1, 2, 3)
+            updateStepIndicatorsUI();
+        }
+
+        function updateStepIndicatorsUI() {
+            for (let i = 1; i <= 3; i++) {
+                const card = document.getElementById(`step-indicator-${i}`);
+                const badge = document.getElementById(`step-badge-${i}`);
+                const statusText = document.getElementById(`step-status-text-${i}`);
+                const icon = document.getElementById(`step-icon-${i}`);
+
+                if (i <= sessionState.completedSteps) {
+                    // Step Superato
+                    card.className = "bg-emerald-50 border-2 border-emerald-500 rounded-xl p-3.5 flex items-center justify-between shadow-xs";
+                    badge.className = "h-8 w-8 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-sm";
+                    statusText.className = "text-xs font-bold text-emerald-700";
+                    statusText.textContent = "Superata ✓";
+                    icon.className = "text-emerald-600";
+                    icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`;
+                } else if (i === sessionState.currentStep) {
+                    // Step Corrente Attivo
+                    card.className = "bg-white border-2 border-indigo-600 rounded-xl p-3.5 flex items-center justify-between shadow-sm";
+                    badge.className = "h-8 w-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-sm";
+                    statusText.className = "text-xs font-semibold text-indigo-600";
+                    statusText.textContent = "In svolgimento...";
+                    icon.className = "text-indigo-600";
+                    icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+                } else {
+                    // Step Bloccato
+                    card.className = "bg-slate-100 border-2 border-slate-200 rounded-xl p-3.5 flex items-center justify-between opacity-75";
+                    badge.className = "h-8 w-8 rounded-lg bg-slate-300 text-slate-600 font-bold flex items-center justify-center text-sm";
+                    statusText.className = "text-xs font-medium text-slate-500";
+                    statusText.textContent = `Bloccata (Completa la ${i - 1}ª)`;
+                    icon.className = "text-slate-400";
+                    icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>`;
+                }
+            }
+        }
+
+        function toggleNextStepButton() {
+            const isChecked = document.getElementById("confirm-completion-checkbox").checked;
+            document.getElementById("btn-unlock-next").disabled = !isChecked;
+        }
+
+        function reloadCurrentIframe() {
+            const iframe = document.getElementById("learningapp-iframe");
+            const currentSrc = iframe.src;
+            iframe.src = "";
+            setTimeout(() => { iframe.src = currentSrc; }, 100);
+            showToast("Esercizio ricaricato.", "info");
+        }
+
+        function handleStepFailedAttempt() {
+            sessionState.attempts++;
+            document.getElementById("active-attempt-count").textContent = sessionState.attempts;
+            reloadCurrentIframe();
+            showToast(`Tentativo aggiornato (N° ${sessionState.attempts}). Riprova l'attività corrente!`, "warning");
+        }
+
+        function completeCurrentStep() {
+            if (sessionState.isFinished) return;
+
+            sessionState.completedSteps = sessionState.currentStep;
+
+            if (sessionState.currentStep < 3) {
+                const nextStep = sessionState.currentStep + 1;
+                showToast(`Ottimo! Attività ${sessionState.currentStep} superata. Sbloccata Attività ${nextStep}!`, "success");
+                loadStep(nextStep);
+            } else {
+                // Tutte e 3 le attività completate!
+                finishLearningPath(true, "Tutte le attività completate");
+            }
+        }
+
+        // Listener per eventuali eventi postMessage da LearningApps
+        function handleExternalIframeMessage(event) {
+            if (!event.origin.includes("learningapps.org")) return;
+            try {
+                const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+                if (data && (data.solved === true || data.status === "completed" || data.event === "solved")) {
+                    document.getElementById("confirm-completion-checkbox").checked = true;
+                    toggleNextStepButton();
+                    showToast("LearningApps ha rilevato il completamento! Clicca sul pulsante verde per proseguire.", "success");
+                }
+            } catch (e) {
+                // Ignora messaggi non JSON
+            }
+        }
+
+        // ==================== COMPLETAMENTO PERCORSO E REPORT ====================
+        function finishLearningPath(passed, reasonText) {
+            if (sessionState.isFinished) return;
+            sessionState.isFinished = true;
+            sessionState.isPassed = passed;
+
+            if (sessionState.timerInterval) {
+                clearInterval(sessionState.timerInterval);
+            }
+
+            // Salva il risultato nel registro locale (localStorage)
+            saveRecordToStorage();
+
+            // Aggiorna la vista risultato
+            renderResultScreen(passed, reasonText);
+
+            document.getElementById("student-play-view").classList.add("hidden");
+            document.getElementById("student-result-view").classList.remove("hidden");
+        }
+
+        function saveRecordToStorage() {
+            const records = JSON.parse(localStorage.getItem(STORAGE_RECORDS_KEY) || "[]");
+            const newRecord = {
+                id: Date.now(),
+                date: sessionState.date,
+                name: sessionState.name,
+                surname: sessionState.surname,
+                studentClass: sessionState.studentClass,
+                passed: sessionState.isPassed,
+                completedSteps: sessionState.completedSteps,
+                attempts: sessionState.attempts,
+                elapsedSeconds: sessionState.elapsedSeconds
+            };
+            records.unshift(newRecord);
+            localStorage.setItem(STORAGE_RECORDS_KEY, JSON.stringify(records));
+        }
+
+        function renderResultScreen(passed, reasonText) {
+            const banner = document.getElementById("result-banner");
+            const badgeLabel = document.getElementById("result-badge-label");
+            const mainTitle = document.getElementById("result-main-title");
+            const subtitle = document.getElementById("result-subtitle");
+            const statusIcon = document.getElementById("result-status-icon");
+            const repOutcome = document.getElementById("rep-outcome");
+
+            if (passed) {
+                banner.className = "px-6 py-6 sm:px-8 bg-emerald-600 text-white";
+                badgeLabel.textContent = "Attestato di Superamento";
+                mainTitle.textContent = "PERCORSO SUPERATO!";
+                subtitle.textContent = "Complimenti! Hai superato positivamente tutte e 3 le attività in sequenza.";
+                statusIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+                repOutcome.className = "text-base font-extrabold mt-0.5 text-emerald-600";
+                repOutcome.textContent = "SUPERATO (3/3 Attività)";
+            } else {
+                banner.className = "px-6 py-6 sm:px-8 bg-rose-600 text-white";
+                badgeLabel.textContent = "Esito Verifica";
+                mainTitle.textContent = "NON SUPERATO";
+                subtitle.textContent = `Motivo: ${reasonText}. Puoi stampare il report e riprovare il percorso.`;
+                statusIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+                repOutcome.className = "text-base font-extrabold mt-0.5 text-rose-600";
+                repOutcome.textContent = `NON SUPERATO (${sessionState.completedSteps}/3 Attività)`;
+            }
+
+            // Popola campi report
+            document.getElementById("report-verification-code").textContent = `#LA-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+            document.getElementById("rep-fullname").textContent = `${sessionState.name} ${sessionState.surname}`;
+            document.getElementById("rep-class").textContent = sessionState.studentClass;
+            document.getElementById("rep-date").textContent = formatDateIT(sessionState.date);
+            document.getElementById("rep-attempts").textContent = sessionState.attempts;
+            document.getElementById("rep-attempts-suffix").textContent = sessionState.attempts === 1 ? "o" : "i";
+            document.getElementById("rep-time").textContent = formatReadableDuration(sessionState.elapsedSeconds);
+
+            // Dettaglio moduli
+            const breakdown = document.getElementById("rep-steps-breakdown");
+            breakdown.innerHTML = LEARNING_APPS.map(app => {
+                const isDone = app.step <= sessionState.completedSteps;
+                return `
+                    <div class="flex items-center justify-between px-4 py-2.5 rounded-xl border ${isDone ? 'bg-emerald-50/60 border-emerald-200' : 'bg-slate-50 border-slate-200'}">
+                        <span class="text-sm font-semibold text-slate-800">${app.title}</span>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full ${isDone ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                            ${isDone ? 'Superata ✓' : 'Non completata ✗'}
+                        </span>
+                    </div>
+                `;
+            }).join("");
+
+            // Reset stato pulsante stampa
+            const printBtn = document.getElementById("btn-print-report");
+            const printText = document.getElementById("btn-print-text");
+            printBtn.className = "w-full sm:w-auto flex-1 py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2 cursor-pointer";
+            printText.textContent = "Stampa Report (Obbligatorio)";
+        }
+
+        function printStudentReport() {
+            sessionState.reportPrinted = true;
+            document.body.classList.remove("printing-teacher");
+
+            const printBtn = document.getElementById("btn-print-report");
+            const printText = document.getElementById("btn-print-text");
+            printBtn.className = "w-full sm:w-auto flex-1 py-3.5 px-6 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2 cursor-pointer";
+            printText.textContent = "Report Stampato ✓ (Stampa di nuovo)";
+
+            window.print();
+        }
+
+        function playAgain() {
+            if (!sessionState.reportPrinted) {
+                showToast("Ricorda: è obbligatorio stampare il report prima di iniziare un nuovo tentativo!", "warning");
+                // Evidenzia il pulsante stampa
+                const printBtn = document.getElementById("btn-print-report");
+                printBtn.classList.add("pulse-warning");
+                setTimeout(() => printBtn.classList.remove("pulse-warning"), 2000);
+                return;
+            }
+
+            // Riavvia direttamente il percorso per lo stesso alunno incrementando i tentativi
+            startLearningPath(null);
+        }
+
+        // ==================== AREA DOCENTI (AUTENTICAZIONE E GESTIONE) ====================
+        function openTeacherAuth() {
+            if (isTeacherAuthenticated) {
+                switchArea("teacher");
+                return;
+            }
+            document.getElementById("teacher-code-input").value = "";
+            document.getElementById("teacher-auth-error").classList.add("hidden");
+            document.getElementById("teacher-auth-modal").classList.remove("hidden");
+            setTimeout(() => document.getElementById("teacher-code-input").focus(), 100);
+        }
+
+        function closeTeacherAuth() {
+            document.getElementById("teacher-auth-modal").classList.add("hidden");
+        }
+
+        function verifyTeacherCode(event) {
+            event.preventDefault();
+            const code = document.getElementById("teacher-code-input").value.trim();
+            if (code === TEACHER_ACCESS_CODE) {
+                isTeacherAuthenticated = true;
+                closeTeacherAuth();
+                switchArea("teacher");
+                showToast("Accesso Area Docenti effettuato con successo.", "success");
+            } else {
+                document.getElementById("teacher-auth-error").classList.remove("hidden");
+            }
+        }
+
+        function toggleTeacherCustomMin() {
+            const policy = document.getElementById("teacher-timer-policy").value;
+            const box = document.getElementById("teacher-custom-min-box");
+            if (policy === "force_custom") {
+                box.classList.remove("hidden");
+            } else {
+                box.classList.add("hidden");
+            }
+        }
+
+        function loadTeacherPolicyUI() {
+            const policy = JSON.parse(localStorage.getItem(STORAGE_POLICY_KEY) || '{"mode":"student_choice","minutes":8}');
+            document.getElementById("teacher-timer-policy").value = policy.mode;
+            document.getElementById("teacher-custom-minutes").value = policy.minutes || 8;
+            toggleTeacherCustomMin();
+        }
+
+        function saveTeacherTimerPolicy() {
+            const mode = document.getElementById("teacher-timer-policy").value;
+            const minutes = parseInt(document.getElementById("teacher-custom-minutes").value, 10) || 8;
+            localStorage.setItem(STORAGE_POLICY_KEY, JSON.stringify({ mode, minutes }));
+            showToast("Impostazione timer salvata e applicata all'Area Alunni.", "success");
+        }
+
+        function renderTeacherTable() {
+            const records = JSON.parse(localStorage.getItem(STORAGE_RECORDS_KEY) || "[]");
+            const searchQuery = document.getElementById("teacher-search-input").value.trim().toLowerCase();
+            const statusFilter = document.getElementById("teacher-filter-status").value;
+
+            const filtered = records.filter(r => {
+                const matchesSearch =
+                    r.name.toLowerCase().includes(searchQuery) ||
+                    r.surname.toLowerCase().includes(searchQuery) ||
+                    r.studentClass.toLowerCase().includes(searchQuery);
+
+                const matchesStatus =
+                    statusFilter === "all" ||
+                    (statusFilter === "passed" && r.passed) ||
+                    (statusFilter === "failed" && !r.passed);
+
+                return matchesSearch && matchesStatus;
+            });
+
+            const tbody = document.getElementById("teacher-records-tbody");
+            const emptyState = document.getElementById("teacher-empty-state");
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = "";
+                emptyState.classList.remove("hidden");
+                return;
+            }
+
+            emptyState.classList.add("hidden");
+            tbody.innerHTML = filtered.map(r => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-3.5 px-4 text-slate-600 whitespace-nowrap">${formatDateIT(r.date)}</td>
+                    <td class="py-3.5 px-4 font-bold text-slate-900">${escapeHTML(r.name)} ${escapeHTML(r.surname)}</td>
+                    <td class="py-3.5 px-4"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-xs">${escapeHTML(r.studentClass)}</span></td>
+                    <td class="py-3.5 px-4">
+                        ${r.passed
+                            ? '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">SUPERATO</span>'
+                            : '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700">NON SUPERATO</span>'
+                        }
+                    </td>
+                    <td class="py-3.5 px-4 font-semibold text-slate-700">${r.completedSteps} / 3</td>
+                    <td class="py-3.5 px-4 font-semibold text-slate-700">${r.attempts}</td>
+                    <td class="py-3.5 px-4 font-mono text-slate-600">${formatReadableDuration(r.elapsedSeconds)}</td>
+                </tr>
+            `).join("");
+        }
+
+        function requestClearRecords() {
+            document.getElementById("clear-confirm-banner").classList.remove("hidden");
+        }
+
+        function cancelClearRecords() {
+            document.getElementById("clear-confirm-banner").classList.add("hidden");
+        }
+
+        function confirmClearRecords() {
+            localStorage.removeItem(STORAGE_RECORDS_KEY);
+            cancelClearRecords();
+            renderTeacherTable();
+            showToast("Registro risultati svuotato.", "info");
+        }
+
+        function printTeacherRegister() {
+            document.body.classList.add("printing-teacher");
+            window.print();
+            setTimeout(() => document.body.classList.remove("printing-teacher"), 500);
+        }
+
+        function exportTeacherCSV() {
+            const records = JSON.parse(localStorage.getItem(STORAGE_RECORDS_KEY) || "[]");
+            if (records.length === 0) {
+                showToast("Nessun dato da esportare.", "warning");
+                return;
+            }
+
+            const headers = ["Data", "Nome", "Cognome", "Classe", "Esito", "Step Completati", "Tentativi", "Tempo (secondi)"];
+            const rows = records.map(r => [
+                formatDateIT(r.date),
+                `"${r.name}"`,
+                `"${r.surname}"`,
+                `"${r.studentClass}"`,
+                r.passed ? "SUPERATO" : "NON SUPERATO",
+                `${r.completedSteps}/3`,
+                r.attempts,
+                r.elapsedSeconds
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(";"), ...rows.map(e => e.join(";"))].join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Registro_LearningApps_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("File CSV scaricato con successo!", "success");
+        }
+
+        // ==================== UTILITY DI FORMATTAZIONE ====================
+        function formatMMSS(totalSeconds) {
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+        }
+
+        function formatReadableDuration(totalSeconds) {
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            return `${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
+        }
+
+        function formatDateIT(isoDate) {
+            if (!isoDate) return "";
+            const parts = isoDate.split("-");
+            if (parts.length !== 3) return isoDate;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function escapeHTML(str) {
+            return String(str).replace(/[&<>"']/g, m => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+            }[m]));
+        }
+    </script>
+</body>
+</html>
